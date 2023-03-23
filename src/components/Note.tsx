@@ -1,5 +1,13 @@
-import React from "react";
-import "./note.css";
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+/* eslint-disable react/prop-types */
+
+import React from 'react';
+import './note.css';
+
 export const Note = ({ index, text, color, onDelete }) => {
   // function to handle delete button click
   const handleClick = () => {
