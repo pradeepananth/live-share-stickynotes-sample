@@ -1,5 +1,6 @@
 import {
   ContainerState,
+  IClientInfo,
   IFluidContainerInfo,
   IFluidTenantInfo,
   ILiveShareHost,
@@ -9,15 +10,16 @@ import {
 const LiveShareRoutePrefix = "livesync/v1";
 const GetNtpTimeRoute = "getNTPTime";
 const GetFluidTenantInfoRoute = "fluid/tenantInfo/get";
-const RegisterClientRolesRoute = "clientRoles/register";
+const RegisterClientRoute = "client/register";
 const ClientRolesGetRoute = "clientRoles/get";
+const UserGetRoute = "user/get";
 const FluidTokenGetRoute = "fluid/token/get";
 const FluidContainerGetRoute = "fluid/container/get";
 const FluidContainerSetRoute = "fluid/container/set";
 
 export class MockServerLiveShareHost implements ILiveShareHost {
   private constructor(
-    private readonly acsToken: string,
+    private readonly userToken: string,
     private readonly meetingJoinUrl: string,
     private readonly skypeMri: string,
     private readonly apiEndpoint: string
@@ -43,7 +45,7 @@ export class MockServerLiveShareHost implements ILiveShareHost {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.acsToken}`,
+          Authorization: `Bearer ${this.userToken}`,
         },
         body: JSON.stringify(request),
       }
@@ -60,7 +62,7 @@ export class MockServerLiveShareHost implements ILiveShareHost {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.acsToken}`,
+          Authorization: `Bearer ${this.userToken}`,
         },
         body: JSON.stringify(request),
       }
@@ -78,7 +80,7 @@ export class MockServerLiveShareHost implements ILiveShareHost {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.acsToken}`,
+          Authorization: `Bearer ${this.userToken}`,
         },
         body: JSON.stringify(request),
       }
@@ -97,7 +99,7 @@ export class MockServerLiveShareHost implements ILiveShareHost {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.acsToken}`,
+          Authorization: `Bearer ${this.userToken}`,
         },
         body: JSON.stringify(request),
       }
@@ -121,18 +123,43 @@ export class MockServerLiveShareHost implements ILiveShareHost {
     const request = this.constructBaseRequest() as FluidClientRolesInput;
     request.clientId = clientId;
     const response = await fetch(
-      `${this.apiEndpoint}/${LiveShareRoutePrefix}/${RegisterClientRolesRoute}`,
+      `${this.apiEndpoint}/${LiveShareRoutePrefix}/${RegisterClientRoute}`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.acsToken}`,
+          Authorization: `Bearer ${this.userToken}`,
+        },
+        body: JSON.stringify(request),
+      }
+    );
+    if (response.status === 200) {
+      return [UserMeetingRole.organizer];
+    } else {
+      return [UserMeetingRole.guest];
+    }
+  }
+
+  async getClientInfo(clientId: string): Promise<IClientInfo> {
+    const request = this.constructBaseRequest() as FluidClientRolesInput;
+    request.clientId = clientId;
+    const response = await fetch(
+      `${this.apiEndpoint}/${LiveShareRoutePrefix}/${UserGetRoute}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${this.userToken}`,
         },
         body: JSON.stringify(request),
       }
     );
     const data = await response.json();
-    return data;
+    return {
+      userId: data.userId,
+      displayName: data.displayName,
+      roles: [UserMeetingRole.organizer],
+    };
   }
 
   async setFluidContainerId(containerId: string): Promise<IFluidContainerInfo> {
@@ -144,7 +171,7 @@ export class MockServerLiveShareHost implements ILiveShareHost {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${this.acsToken}`,
+          Authorization: `Bearer ${this.userToken}`,
         },
         body: JSON.stringify(request),
       }
