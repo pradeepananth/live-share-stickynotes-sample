@@ -68,7 +68,7 @@ export function useSharedObjects(
 
     // Create the client, join container, and set results
     console.log("useSharedObjects: joining container");
-    const client = new LiveShareClient(host);
+    const client = new LiveShareClient(host as any);
     client
       .joinContainer(schema)
       .then((results) => {
